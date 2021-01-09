@@ -37,6 +37,12 @@ def send_alert(message):
     asyncio.run_coroutine_threadsafe(send_message(message), client.loop)
 
 
+def reschedule_alerts():
+    events = mongoHelper.findMany(collectionName, {})
+    for event in events:
+        schedule_alerts(event)
+
+
 def get_event_description(event: dict):
     event_description = "-------------------------------------------------\n"
     event_description += f"Category: {event['category']}\n"
@@ -71,9 +77,9 @@ async def on_message(ctx):
 
     if str(ctx.content) == "!help":
         help_string = "To add an event, type\n" \
-               "'!add category,sub-category,description,name,type,dd.mm.yyyy.hh.mm'\n" \
-               "To view all events, type\n" \
-               "'!show'"
+                      "'!add category,sub-category,description,name,type,dd.mm.yyyy.hh.mm'\n" \
+                      "To view all events, type\n" \
+                      "'!show'"
         ctx.channel.send(help_string)
 
     if str(ctx.content).startswith("!add "):
@@ -109,5 +115,5 @@ async def on_message(ctx):
 async def delete_old_events():
     mongoHelper.deleteEventsBefore(collectionName, datetime.datetime.now())
 
-
+reschedule_alerts()
 client.run(token)
